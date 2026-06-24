@@ -1,50 +1,88 @@
 // controllers/documentController.js
-
-import Document from "../models/Document.js";
+import Chunk from "../models/chunks.js";
+import { chunkText } from "../services/chunkService.js";
+import Document from "../models/document.js";
 import { extractText } from "../services/pdfService.js";
 
 // POST /api/documents/upload
+import mongoose from "mongoose";
+
 export const uploadDocument = async (req, res) => {
+  const session = await mongoose.startSession();
+
   try {
+    session.startTransaction();
+
     if (!req.file) {
+      await session.abortTransaction();
+      session.endSession();
+
       return res.status(400).json({
         success: false,
         message: "No PDF file uploaded",
       });
     }
 
-    const { text, pageCount } = await extractText(
-      req.file.buffer
-    );
+    const { text, pageCount } = await extractText(req.file.buffer);
 
     if (!text.trim()) {
+      await session.abortTransaction();
+      session.endSession();
+
       return res.status(400).json({
         success: false,
         message:
           "Could not extract text from PDF. The file may be scanned or image-based.",
       });
     }
-    console.log("req.user._id", req.user.id);
-    const document = await Document.create({
+
+    const document = await Document.create(
+      [
+        {
+          owner: req.user.id,
+          filename: req.file.originalname,
+          extractedText: text,
+          size: req.file.size,
+          pageCount,
+        },
+      ],
+      { session },
+    );
+
+    const savedDocument = document[0];
+
+    const chunks = chunkText(text);
+
+    const chunkDocuments = chunks.map((chunk, index) => ({
       owner: req.user.id,
-      filename: req.file.originalname,
-      extractedText: text,
-      size: req.file.size,
-      pageCount,
+      document: savedDocument._id,
+      chunkIndex: index,
+      content: chunk,
+    }));
+
+    await Chunk.insertMany(chunkDocuments, {
+      session,
     });
 
-    res.status(201).json({
+    await session.commitTransaction();
+    session.endSession();
+
+    return res.status(201).json({
       success: true,
       document: {
-        id: document._id,
-        filename: document.filename,
-        size: document.size,
-        pageCount: document.pageCount,
-        createdAt: document.createdAt,
+        id: savedDocument._id,
+        filename: savedDocument.filename,
+        size: savedDocument.size,
+        pageCount: savedDocument.pageCount,
+        chunkCount: chunks.length,
+        createdAt: savedDocument.createdAt,
       },
     });
   } catch (error) {
-    res.status(500).json({
+    await session.abortTransaction();
+    session.endSession();
+
+    return res.status(500).json({
       success: false,
       message: error.message,
     });
