@@ -3,7 +3,7 @@ import Chunk from "../models/chunks.js";
 import { chunkText } from "../services/chunkService.js";
 import Document from "../models/document.js";
 import { extractText } from "../services/pdfService.js";
-
+import { generateEmbeddings } from "../services/embeddingService.js";
 // POST /api/documents/upload
 import mongoose from "mongoose";
 
@@ -51,19 +51,22 @@ export const uploadDocument = async (req, res) => {
 
     const savedDocument = document[0];
 
-    const chunks = chunkText(text);
+    const chunks = await chunkText(text);
 
-    const chunkDocuments = chunks.map((chunk, index) => ({
+    const embeddedChunks = await generateEmbeddings(chunks);
+    if (vectors.length !== chunks.length) {
+    throw new Error(
+        "Embedding generation failed."
+    );
+}
+
+    const chunkDocuments = chunks.map((content, index) => ({
       owner: req.user.id,
       document: savedDocument._id,
       chunkIndex: index,
-      content: chunk,
+      content,
+      embedding: vectors[index],
     }));
-
-    await Chunk.insertMany(chunkDocuments, {
-      session,
-    });
-
     await session.commitTransaction();
     session.endSession();
 

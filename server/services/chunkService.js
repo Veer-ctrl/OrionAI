@@ -1,20 +1,12 @@
-const CHUNK_SIZE = 1000;
-const CHUNK_OVERLAP = 200;
+import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
 
-export const chunkText = (text) => {
-  const chunks = [];
+const splitter = new RecursiveCharacterTextSplitter({
+  chunkSize: 1000,
+  chunkOverlap: 200,
+});
 
-  let start = 0;
+export const chunkText = async (text) => {
+  const docs = await splitter.createDocuments([text]);
 
-  while (start < text.length) {
-    const end = start + CHUNK_SIZE;
-
-    const chunk = text.slice(start, end);
-
-    chunks.push(chunk);
-
-    start += CHUNK_SIZE - CHUNK_OVERLAP;
-  }
-
-  return chunks;
+  return docs.map((doc) => doc.pageContent);
 };
