@@ -4,6 +4,7 @@ import { chunkText } from "../services/chunkService.js";
 import Document from "../models/document.js";
 import { extractText } from "../services/pdfService.js";
 import { generateEmbeddings } from "../services/embeddingService.js";
+import { upsertChunks,deleteChunks } from "../services/vectorService.js";
 // POST /api/documents/upload
 import mongoose from "mongoose";
 
@@ -14,28 +15,19 @@ export const uploadDocument = async (req, res) => {
     session.startTransaction();
 
     if (!req.file) {
-      await session.abortTransaction();
-      session.endSession();
-
-      return res.status(400).json({
-        success: false,
-        message: "No PDF file uploaded",
-      });
+      throw new Error("No PDF file uploaded.");
     }
 
+    // 1. Extract text
     const { text, pageCount } = await extractText(req.file.buffer);
 
     if (!text.trim()) {
-      await session.abortTransaction();
-      session.endSession();
-
-      return res.status(400).json({
-        success: false,
-        message:
-          "Could not extract text from PDF. The file may be scanned or image-based.",
-      });
+      throw new Error(
+        "Could not extract text from PDF. The file may be scanned or image-based."
+      );
     }
 
+    // 2. Create document
     const document = await Document.create(
       [
         {
@@ -46,29 +38,51 @@ export const uploadDocument = async (req, res) => {
           pageCount,
         },
       ],
-      { session },
+      { session }
     );
 
     const savedDocument = document[0];
 
+    // 3. Split into chunks
     const chunks = await chunkText(text);
 
-    const embeddedChunks = await generateEmbeddings(chunks);
-    if (vectors.length !== chunks.length) {
-    throw new Error(
-        "Embedding generation failed."
-    );
-}
+    // 4. Generate embeddings
+    const vectors = await generateEmbeddings(chunks);
 
+    if (vectors.length !== chunks.length) {
+      throw new Error("Embedding generation failed.");
+    }
+
+    // 5. Prepare chunks for Pinecone
+    const pineconeChunks = chunks.map((content, index) => ({
+      content,
+      embedding: vectors[index],
+      chunkIndex: index,
+    }));
+
+    // 6. Upload vectors to Pinecone
+    await upsertChunks(
+      pineconeChunks,
+      savedDocument._id.toString()
+    );
+
+    // 7. Prepare MongoDB chunk documents
     const chunkDocuments = chunks.map((content, index) => ({
       owner: req.user.id,
       document: savedDocument._id,
       chunkIndex: index,
       content,
       embedding: vectors[index],
+      vectorId: `${savedDocument._id}-${index}`,
     }));
+
+    // 8. Save chunks
+    await Chunk.insertMany(chunkDocuments, {
+      session,
+    });
+
+    // 9. Commit transaction
     await session.commitTransaction();
-    session.endSession();
 
     return res.status(201).json({
       success: true,
@@ -77,18 +91,19 @@ export const uploadDocument = async (req, res) => {
         filename: savedDocument.filename,
         size: savedDocument.size,
         pageCount: savedDocument.pageCount,
-        chunkCount: chunks.length,
+        chunkCount: chunkDocuments.length,
         createdAt: savedDocument.createdAt,
       },
     });
   } catch (error) {
     await session.abortTransaction();
-    session.endSession();
 
     return res.status(500).json({
       success: false,
       message: error.message,
     });
+  } finally {
+    session.endSession();
   }
 };
 
@@ -143,29 +158,53 @@ export const getDocumentById = async (req, res) => {
 
 // DELETE /api/documents/:id
 export const deleteDocument = async (req, res) => {
+  const session = await mongoose.startSession();
+
   try {
+    session.startTransaction();
+
     const document = await Document.findOne({
       _id: req.params.id,
       owner: req.user.id,
-    });
+    }).session(session);
 
     if (!document) {
-      return res.status(404).json({
-        success: false,
-        message: "Document not found",
-      });
+      throw new Error("Document not found.");
     }
 
-    await document.deleteOne();
+    // 1. Delete vectors from Pinecone
+    await deleteChunks(document._id.toString());
 
-    res.status(200).json({
+    // 2. Delete chunks from MongoDB
+    await Chunk.deleteMany(
+      {
+        document: document._id,
+      },
+      { session }
+    );
+
+    // 3. Delete document
+    await Document.deleteOne(
+      {
+        _id: document._id,
+      },
+      { session }
+    );
+
+    await session.commitTransaction();
+
+    return res.status(200).json({
       success: true,
-      message: "Document deleted successfully",
+      message: "Document deleted successfully.",
     });
   } catch (error) {
-    res.status(500).json({
+    await session.abortTransaction();
+
+    return res.status(500).json({
       success: false,
       message: error.message,
     });
+  } finally {
+    session.endSession();
   }
 };
