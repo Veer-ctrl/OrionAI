@@ -1,5 +1,4 @@
 import index from "../config/pinecone.js";
-
 /**
  * Upload chunk embeddings to Pinecone
  * @param {Array} chunks
