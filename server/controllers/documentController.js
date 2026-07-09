@@ -4,9 +4,11 @@ import { chunkText } from "../services/chunkService.js";
 import Document from "../models/document.js";
 import { extractText } from "../services/pdfService.js";
 import { generateEmbeddings } from "../services/embeddingService.js";
-import { upsertChunks,deleteChunks } from "../services/vectorService.js";
-// POST /api/documents/upload
+import { upsertChunks, deleteChunks } from "../services/vectorService.js";
 import mongoose from "mongoose";
+import { uploadPdf } from "../services/cloudinaryService.js";
+import cloudinary from "../config/cloudinary.js";
+import Conversation from "../models/Conversation.js";
 
 export const uploadDocument = async (req, res) => {
   const session = await mongoose.startSession();
@@ -23,11 +25,18 @@ export const uploadDocument = async (req, res) => {
 
     if (!text.trim()) {
       throw new Error(
-        "Could not extract text from PDF. The file may be scanned or image-based."
+        "Could not extract text from PDF. The file may be scanned or image-based.",
       );
     }
 
     // 2. Create document
+    // 2. Upload PDF to Cloudinary
+    const cloudinaryFile = await uploadPdf(
+      req.file.buffer,
+      req.file.originalname,
+    );
+
+    // 3. Create document
     const document = await Document.create(
       [
         {
@@ -36,9 +45,11 @@ export const uploadDocument = async (req, res) => {
           extractedText: text,
           size: req.file.size,
           pageCount,
+          cloudinaryId: cloudinaryFile.public_id,
+          fileUrl: cloudinaryFile.secure_url,
         },
       ],
-      { session }
+      { session },
     );
 
     const savedDocument = document[0];
@@ -61,10 +72,7 @@ export const uploadDocument = async (req, res) => {
     }));
 
     // 6. Upload vectors to Pinecone
-    await upsertChunks(
-      pineconeChunks,
-      savedDocument._id.toString()
-    );
+    await upsertChunks(pineconeChunks, savedDocument._id.toString());
 
     // 7. Prepare MongoDB chunk documents
     const chunkDocuments = chunks.map((content, index) => ({
@@ -92,6 +100,7 @@ export const uploadDocument = async (req, res) => {
         size: savedDocument.size,
         pageCount: savedDocument.pageCount,
         chunkCount: chunkDocuments.length,
+        fileUrl: savedDocument.fileUrl,
         createdAt: savedDocument.createdAt,
       },
     });
@@ -172,35 +181,43 @@ export const deleteDocument = async (req, res) => {
       throw new Error("Document not found.");
     }
 
-    // 1. Delete vectors from Pinecone
+    // Delete PDF from Cloudinary
+    await cloudinary.uploader.destroy(document.cloudinaryId, {
+      resource_type: "raw",
+    });
+
+    // Delete Pinecone vectors
     await deleteChunks(document._id.toString());
 
-    // 2. Delete chunks from MongoDB
+    // Delete chunks
     await Chunk.deleteMany(
       {
         document: document._id,
       },
-      { session }
+      { session },
     );
 
-    // 3. Delete document
-    await Document.deleteOne(
+    // Delete conversations
+    await Conversation.deleteMany(
       {
-        _id: document._id,
+        document: document._id,
       },
-      { session }
+      { session },
     );
+
+    // Delete document
+    await document.deleteOne({ session });
 
     await session.commitTransaction();
 
-    return res.status(200).json({
+    res.json({
       success: true,
       message: "Document deleted successfully.",
     });
   } catch (error) {
     await session.abortTransaction();
 
-    return res.status(500).json({
+    res.status(500).json({
       success: false,
       message: error.message,
     });

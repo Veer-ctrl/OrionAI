@@ -7,18 +7,26 @@ const messageSchema = new mongoose.Schema(
       enum: ["user", "assistant"],
       required: true,
     },
+
+    content: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+
     sources: [
       {
         chunkIndex: Number,
         score: Number,
       },
     ],
+
     createdAt: {
       type: Date,
       default: Date.now,
     },
   },
-  { _id: false },
+  
 );
 
 const conversationSchema = new mongoose.Schema(

@@ -1,5 +1,4 @@
 // models/Document.js
-
 import mongoose from "mongoose";
 
 const documentSchema = new mongoose.Schema(
@@ -31,12 +30,22 @@ const documentSchema = new mongoose.Schema(
       required: true,
       default: 0,
     },
+    cloudinaryId: {
+      type: String,
+      required: true,
+    },
+
+    fileUrl: {
+      type: String,
+      required: true,
+    },
   },
   {
     timestamps: true,
-  }
+  },
 );
 
-const Document = mongoose.models.Document || mongoose.model("Document", documentSchema);
+const Document =
+  mongoose.models.Document || mongoose.model("Document", documentSchema);
 
 export default Document;

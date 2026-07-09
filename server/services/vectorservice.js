@@ -43,7 +43,7 @@ export const upsertChunks = async (chunks, documentId) => {
 export const searchChunks = async (
   queryEmbedding,
   documentId,
-  topK = 5
+  topK = 10
 ) => {
   try {
     const response = await index.namespace(documentId).query({
@@ -51,6 +51,8 @@ export const searchChunks = async (
       topK,
       includeMetadata: true,
     });
+    console.log("Retrieved Chunks:");
+console.log(response.matches);
 
     return response.matches.map((match) => ({
       text: match.metadata.text,

@@ -1,22 +1,21 @@
 import { generateChatResponse } from "../services/chatService.js";
 
-// @desc    Chat with a document
+// @desc    Chat with a conversation
 // @route   POST /api/chat
 // @access  Private
 export const chatWithDocument = async (req, res) => {
   try {
-    const { conversationId, documentId, question } = req.body;
+    const { conversationId, question } = req.body;
 
-    if (!documentId || !question) {
+    if (!conversationId || !question) {
       return res.status(400).json({
         success: false,
-        message: "Document ID and question are required.",
+        message: "Conversation ID and question are required.",
       });
     }
 
     const result = await generateChatResponse({
       conversationId,
-      documentId,
       question,
       userId: req.user.id,
     });

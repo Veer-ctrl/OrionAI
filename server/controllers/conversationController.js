@@ -106,3 +106,42 @@ export const addMessage = async (req, res) => {
     conversation,
   });
 };
+
+export const getConversationByDocument = async (req, res) => {
+  const { documentId } = req.params;
+
+  const conversation = await Conversation.findOne({
+    owner: req.user.id,
+    document: documentId,
+  }).populate("document", "filename");
+
+  if (!conversation) {
+    return res.status(404).json({
+      success: false,
+      message: "Conversation not found.",
+    });
+  }
+
+  res.status(200).json({
+    success: true,
+    conversation,
+  });
+};
+export const getUserConversations = async (
+  req,
+  res
+) => {
+  const conversations =
+    await Conversation.find({
+      owner: req.user.id,
+    })
+      .populate("document", "filename")
+      .sort({
+        updatedAt: -1,
+      });
+
+  res.json({
+    success: true,
+    conversations,
+  });
+};
