@@ -9,11 +9,13 @@ const generateToken = (userId) => {
 };
 
 const setCookieToken = (res, token) => {
+  const isProduction = process.env.NODE_ENV === "production";
+
   res.cookie("token", token, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "strict",
-    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    secure: isProduction,
+    sameSite: isProduction ? "none" : "lax",
+    maxAge: 7 * 24 * 60 * 60 * 1000,
   });
 };
 
@@ -21,7 +23,9 @@ export const register = async (req, res) => {
   const { name, email, password } = req.body;
 
   if (!name || !email || !password) {
-    return res.status(400).json({ message: "Name, email, and password are required." });
+    return res
+      .status(400)
+      .json({ message: "Name, email, and password are required." });
   }
 
   const existingUser = await User.findOne({ email });
@@ -47,7 +51,9 @@ export const login = async (req, res) => {
   const { email, password } = req.body;
 
   if (!email || !password) {
-    return res.status(400).json({ message: "Email and password are required." });
+    return res
+      .status(400)
+      .json({ message: "Email and password are required." });
   }
 
   const user = await User.findOne({ email });
@@ -72,10 +78,10 @@ export const login = async (req, res) => {
 };
 
 export const getMe = async (req, res) => {
-    res.status(200).json({
-        success: true,
-        user: req.user
-    });
+  res.status(200).json({
+    success: true,
+    user: req.user,
+  });
 };
 
 export const logout = async (req, res) => {
