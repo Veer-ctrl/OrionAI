@@ -1,7 +1,7 @@
 import dotenv from "dotenv";
 dotenv.config();
 
-const { upsertChunks } = await import("./services/vectorService.js");
+const { upsertChunks } = await import("./services/vectorservice.js");
 
 const documentId = "test-document";
 

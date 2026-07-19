@@ -1,7 +1,7 @@
 import Conversation from "../models/Conversation.js";
 import Document from "../models/document.js";
 
-import { searchChunks } from "./vectorService.js";
+import { searchChunks } from "./vectorservice.js";
 import { buildPrompt } from "./promptService.js";
 import { generateResponse } from "./geminiService.js";
 import { generateQueryEmbedding } from "./embeddingService.js";

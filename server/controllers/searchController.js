@@ -1,5 +1,5 @@
 import { generateQueryEmbedding } from "../services/embeddingService.js";
-import { searchChunks } from "../services/vectorService.js";
+import { searchChunks } from "../services/vectorservice.js";
 
 export const searchDocument = async (req, res) => {
   try {

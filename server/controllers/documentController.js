@@ -4,7 +4,7 @@ import { chunkText } from "../services/chunkService.js";
 import Document from "../models/document.js";
 import { extractText } from "../services/pdfService.js";
 import { generateEmbeddings } from "../services/embeddingService.js";
-import { upsertChunks, deleteChunks } from "../services/vectorService.js";
+import { upsertChunks, deleteChunks } from "../services/vectorservice.js";
 import mongoose from "mongoose";
 import { uploadPdf } from "../services/cloudinaryService.js";
 import cloudinary from "../config/cloudinary.js";
