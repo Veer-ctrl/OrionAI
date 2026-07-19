@@ -1,12 +1,12 @@
 import { createContext, useEffect, useState } from "react";
 import { toast } from "sonner";
-
+import AuthContext from "./AuthContext";
 import documentService from "../services/documentService";
-
+import { useContext } from "react";
 export const DocumentContext = createContext();
-
 export function DocumentProvider({ children }) {
   const [documents, setDocuments] = useState([]);
+  const { user, loading: authLoading } = useContext(AuthContext);
 
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
@@ -89,9 +89,11 @@ export function DocumentProvider({ children }) {
     }
   };
 
-  useEffect(() => {
+useEffect(() => {
+  if (!authLoading && user) {
     refreshDocuments();
-  }, []);
+  }
+}, [authLoading, user]);
 
   const value = {
     documents,

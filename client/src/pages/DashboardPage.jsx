@@ -2,14 +2,13 @@ import { useEffect, useState } from "react";
 import DashboardHeader from "../components/dashboard/DashboardHeader";
 import StatsCards from "../components/dashboard/StatCards";
 import RecentDocuments from "../components/dashboard/RecentDocuments";
-import QuickActions from "../components/dashboard/QuickActions";
+import LoadingSpinner from "@/components/Common/LoadingSpinner";
 
 import { useDocuments } from "../hooks/useDocuments";
 import conversationService from "../services/conversationService";
 
 const DashboardPage = () => {
-  const { documents, loading, error, uploadDocument, deleteDocument } =
-    useDocuments();
+  const { documents, loading, error, deleteDocument } = useDocuments();
   const [conversationCount, setConversationCount] = useState(0);
   const [conversationLoading, setConversationLoading] = useState(true);
 
@@ -32,31 +31,29 @@ const DashboardPage = () => {
   }, []);
 
   if (loading || conversationLoading) {
-    return <div>Loading...</div>;
+    return (
+      <div className="flex min-h-[50vh] items-center justify-center">
+        <LoadingSpinner message="Loading..." size="sm" />
+      </div>
+    );
   }
 
   if (error) {
-    return <div className="text-red-500">{error}</div>;
+    return (
+      <div className="flex min-h-[50vh] items-center justify-center">
+        <div className="glass-card rounded-xl px-4 py-3 text-center">
+          <p className="text-xs font-medium text-destructive">{error}</p>
+        </div>
+      </div>
+    );
   }
 
   return (
-    <>
+    <div className="mx-auto w-full max-w-5xl mt-10">
       <DashboardHeader />
-
-      <StatsCards
-        documents={documents}
-        totalConversations={conversationCount}
-      />
-
-      <div className="mt-8 grid gap-6 lg:grid-cols-3">
-       <div className="mt-8">
-  <RecentDocuments
-    documents={documents}
-    onDelete={deleteDocument}
-  />
-</div>
-      </div>
-    </>
+      <StatsCards documents={documents} totalConversations={conversationCount} />
+      <RecentDocuments documents={documents} onDelete={deleteDocument} />
+    </div>
   );
 };
 

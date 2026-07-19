@@ -1,101 +1,85 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import {
-  MessageSquare,
-  FileText,
-  Search,
-} from "lucide-react";
+import { MessageSquare, FileText, Search } from "lucide-react";
 
+import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
 import conversationService from "@/services/conversationService";
 
 const formatRelativeTime = (dateString) => {
   const date = new Date(dateString);
   const diffMs = Date.now() - date.getTime();
-
   const minutes = Math.floor(diffMs / 60000);
   const hours = Math.floor(diffMs / 3600000);
   const days = Math.floor(diffMs / 86400000);
 
   if (minutes < 1) return "Just now";
-  if (minutes < 60) return `${minutes}m ago`;
-  if (hours < 24) return `${hours}h ago`;
+  if (minutes < 60) return `${minutes}m`;
+  if (hours < 24) return `${hours}h`;
   if (days === 1) return "Yesterday";
-  if (days < 7) return `${days}d ago`;
-
+  if (days < 7) return `${days}d`;
   return date.toLocaleDateString();
 };
 
-const SkeletonCard = () => (
-  <div className="animate-pulse rounded-xl border p-4">
-    <div className="flex gap-3">
-      <div className="h-10 w-10 rounded-lg bg-muted" />
-
-      <div className="flex-1 space-y-2">
-        <div className="h-4 w-1/3 rounded bg-muted" />
-        <div className="h-3 w-2/3 rounded bg-muted" />
-      </div>
+const SkeletonRow = () => (
+  <div className="flex items-center gap-3 border-b border-border px-3 py-2.5">
+    <Skeleton className="h-3.5 w-3.5 bg-foreground/10" />
+    <div className="flex-1 space-y-1.5">
+      <Skeleton className="h-3.5 w-1/3 bg-foreground/10" />
+      <Skeleton className="h-3 w-2/3 bg-foreground/10" />
     </div>
   </div>
 );
 
 const EmptyState = () => (
-  <div className="flex flex-col items-center justify-center rounded-xl border border-dashed py-16">
-    <MessageSquare className="h-10 w-10 text-muted-foreground" />
-
-    <h2 className="mt-4 text-lg font-semibold">
-      No conversations yet
-    </h2>
-
-    <p className="mt-2 text-sm text-muted-foreground">
-      Start chatting with one of your documents.
+  <div className="flex flex-col items-center justify-center px-4 py-12 text-center">
+    <MessageSquare className="h-5 w-5 text-muted-foreground" />
+    <h2 className="mt-3 text-sm font-medium text-foreground">No conversations</h2>
+    <p className="mt-1 text-xs text-muted-foreground">
+      Open a document from the dashboard to start chatting.
     </p>
   </div>
 );
 
-const ConversationCard = ({
-  conversation,
-  onClick,
-}) => {
+const ConversationRow = ({ conversation, onClick }) => {
   const lastMessage =
     conversation.messages?.length > 0
-      ? conversation.messages[
-          conversation.messages.length - 1
-        ].content
+      ? conversation.messages[conversation.messages.length - 1].content
       : "No messages yet";
 
   return (
     <div
       onClick={onClick}
-      className="cursor-pointer rounded-xl border bg-background p-4 transition-all hover:border-primary hover:shadow-sm"
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          onClick();
+        }
+      }}
+      className="group flex cursor-pointer items-start gap-2.5 border-b border-border px-3 py-2.5 transition-colors duration-150 last:border-b-0 hover:bg-secondary/50"
     >
-      <div className="flex gap-3">
-        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
-          <FileText className="h-5 w-5 text-primary" />
+      <FileText className="mt-0.5 h-3.5 w-3.5 shrink-0 text-accent/70" />
+
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center justify-between gap-2">
+          <h3 className="truncate text-[13px] font-medium text-foreground group-hover:text-primary">
+            {conversation.document?.filename}
+          </h3>
+          <span className="shrink-0 text-[10px] text-muted-foreground">
+            {formatRelativeTime(conversation.updatedAt)}
+          </span>
         </div>
 
-        <div className="flex-1">
-          <div className="flex items-center justify-between">
-            <h3 className="font-medium">
-              {conversation.document?.filename}
-            </h3>
+        <p className="mt-0.5 line-clamp-1 text-xs text-muted-foreground">
+          {lastMessage}
+        </p>
 
-            <span className="text-xs text-muted-foreground">
-              {formatRelativeTime(
-                conversation.updatedAt
-              )}
-            </span>
-          </div>
-
-          <p className="mt-2 line-clamp-2 text-sm text-muted-foreground">
-            {lastMessage}
-          </p>
-
-          <div className="mt-3 flex items-center gap-2 text-xs text-muted-foreground">
-            <MessageSquare className="h-3 w-3" />
-
-            {conversation.messages?.length || 0} messages
-          </div>
-        </div>
+        <span className="mt-1 inline-flex items-center gap-1 text-[10px] text-muted-foreground">
+          <MessageSquare className="h-2.5 w-2.5" />
+          {conversation.messages?.length || 0}
+        </span>
       </div>
     </div>
   );
@@ -103,20 +87,14 @@ const ConversationCard = ({
 
 const ConversationsPage = () => {
   const navigate = useNavigate();
-
   const [loading, setLoading] = useState(true);
-
   const [search, setSearch] = useState("");
-
-  const [conversations, setConversations] =
-    useState([]);
+  const [conversations, setConversations] = useState([]);
 
   useEffect(() => {
     const fetchConversations = async () => {
       try {
-        const response =
-          await conversationService.getConversations();
-
+        const response = await conversationService.getConversations();
         setConversations(response.conversations);
       } catch (error) {
         console.error(error);
@@ -129,58 +107,52 @@ const ConversationsPage = () => {
   }, []);
 
   const filtered = conversations.filter((c) =>
-    c.document?.filename
-      ?.toLowerCase()
-      .includes(search.toLowerCase())
+    c.document?.filename?.toLowerCase().includes(search.toLowerCase())
   );
 
   return (
-    <div className="mx-auto max-w-4xl">
-      <div>
-        <h1 className="text-3xl font-bold">
-          Conversations
-        </h1>
-
-        <p className="mt-1 text-muted-foreground">
-          Continue where you left off.
-        </p>
-      </div>
-
-      {conversations.length > 0 && (
-        <div className="relative mt-6">
-          <Search className="absolute left-3 top-3.5 h-4 w-4 text-muted-foreground" />
-
-          <input
-            type="text"
-            placeholder="Search conversations..."
-            value={search}
-            onChange={(e) =>
-              setSearch(e.target.value)
-            }
-            className="w-full rounded-xl border bg-background py-3 pl-10 pr-4 outline-none focus:ring-2 focus:ring-primary"
-          />
+    <div className="mx-auto max-w-3xl mt-10">
+      <header className="mb-5 flex items-center justify-between gap-3">
+        <div>
+          <h1 className="text-lg font-semibold tracking-tight text-foreground">
+            Conversations
+          </h1>
+          <p className="text-xs text-muted-foreground">
+            {conversations.length > 0
+              ? `${conversations.length} total`
+              : "Your chat history"}
+          </p>
         </div>
-      )}
 
-      <div className="mt-6 space-y-3">
+        {conversations.length > 0 && (
+          <div className="relative w-full max-w-[180px]">
+            <Search className="absolute top-1/2 left-2.5 h-3 w-3 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              type="text"
+              placeholder="Filter..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="glass-input h-7 pl-7 text-xs focus-visible:ring-primary/30"
+            />
+          </div>
+        )}
+      </header>
+
+      <div className="glass-card overflow-hidden rounded-xl shadow-glow">
         {loading ? (
           <>
-            <SkeletonCard />
-            <SkeletonCard />
-            <SkeletonCard />
+            <SkeletonRow />
+            <SkeletonRow />
+            <SkeletonRow />
           </>
         ) : filtered.length === 0 ? (
           <EmptyState />
         ) : (
           filtered.map((conversation) => (
-            <ConversationCard
+            <ConversationRow
               key={conversation._id}
               conversation={conversation}
-              onClick={() =>
-                navigate(
-                  `/chat/${conversation._id}`
-                )
-              }
+              onClick={() => navigate(`/chat/${conversation._id}`)}
             />
           ))
         )}
@@ -188,4 +160,5 @@ const ConversationsPage = () => {
     </div>
   );
 };
+
 export default ConversationsPage;

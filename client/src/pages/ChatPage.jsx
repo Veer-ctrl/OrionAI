@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { useParams } from "react-router-dom";
 
 import { useChat } from "@/hooks/useChat";
+import LoadingSpinner from "@/components/Common/LoadingSpinner";
 
 import ChatHeader from "@/components/chat/ChatHeader";
 import MessageList from "@/components/chat/MessageList";
@@ -21,36 +22,30 @@ const ChatPage = () => {
 
   useEffect(() => {
     if (!conversationId) return;
-
     loadConversation(conversationId);
   }, [conversationId]);
 
   if (loading) {
     return (
-      <div className="flex h-[calc(100vh-80px)] items-center justify-center">
-        <p className="text-muted-foreground">
-          Loading conversation...
-        </p>
+      <div className="flex h-full items-center justify-center">
+        <LoadingSpinner message="Loading..." size="sm" />
       </div>
     );
   }
 
   return (
-    <div className="flex h-[calc(100vh-80px)] flex-col">
-      <ChatHeader
-        title={document?.filename || "Chat"}
-      />
+    <div className="flex h-full w-full flex-col">
+      <ChatHeader title={document?.filename || "Chat"} />
 
-      <div className="flex-1 overflow-y-auto px-6 py-8">
-        <div className="mx-auto w-full max-w-4xl">
-          <MessageList messages={messages} />
-        </div>
+      <div className="flex-1 overflow-y-auto scrollbar-thin">
+        <MessageList messages={messages} sending={sending} />
       </div>
 
-      <ChatInput
-        sending={sending}
-        onSend={sendMessage}
-      />
+      <div className="border-t border-border bg-background/90 px-4 py-3 backdrop-blur-md">
+        <div className="mx-auto max-w-2xl">
+          <ChatInput sending={sending} onSend={sendMessage} />
+        </div>
+      </div>
     </div>
   );
 };

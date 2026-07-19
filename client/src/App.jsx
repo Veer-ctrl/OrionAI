@@ -7,6 +7,7 @@ import RegisterPage from "./pages/RegisterPage";
 import DashboardPage from "./pages/DashboardPage";
 import ChatPage from "./pages/ChatPage";
 import ConversationsPage from "./pages/ConversationsPage";
+import LandingPage from "./pages/LandingPage";
 // import TestChat from "./pages/TestChat";
 // import TestDocuments from "./pages/TestDocuments";
 // import DocumentsPage from "./pages/DocumentsPage";
@@ -18,7 +19,7 @@ function App() {
     <Routes>
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
-
+      <Route path="/" element={<LandingPage />} />
       <Route element={<ProtectedRoute />}>
         <Route element={<Layout />}>
           <Route path="/dashboard" element={<DashboardPage />} />

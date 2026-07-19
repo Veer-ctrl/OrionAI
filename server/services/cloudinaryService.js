@@ -7,13 +7,13 @@ export const uploadPdf = (buffer, filename) => {
       {
         folder: "orion/documents",
         resource_type: "raw",
-        public_id: `${Date.now()}-${filename.replace(".pdf", "")}`,
+
+        public_id: `${Date.now()}-${filename.replace(/\.pdf$/i, "").trim()}`,
       },
       (error, result) => {
         if (error) return reject(error);
-
         resolve(result);
-      }
+      },
     );
 
     streamifier.createReadStream(buffer).pipe(stream);

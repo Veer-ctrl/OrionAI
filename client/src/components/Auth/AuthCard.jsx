@@ -1,7 +1,10 @@
 const AuthCard = ({ children }) => {
   return (
-    <div className="flex items-center justify-center p-6 sm:p-8">
-      <div className="w-full max-w-md">
+    <div
+      className="flex flex-1 items-center justify-center px-8 py-10 sm:px-12 lg:px-14"
+      style={{ backgroundColor: "#111827" }}
+    >
+      <div className="w-full" style={{ maxWidth: "400px" }}>
         {children}
       </div>
     </div>

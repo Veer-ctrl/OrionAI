@@ -1,19 +1,22 @@
-import Navbar from "./Navbar";
-import Sidebar from "./Sidebar";  
+import Sidebar from "./Sidebar";
 import { Outlet } from "react-router-dom";
 
-const Layout = ({ children }) => {
+const Layout = () => {
   return (
-    <div className="min-h-screen bg-background">
-      
+    <div
+      className="flex h-screen overflow-hidden"
+      style={{ backgroundColor: "#FFF8EC" }}
+    >
+      <Sidebar />
 
-      <div className="flex">
-        <Sidebar />
-
-        <main className="flex-1 overflow-y-auto p-8">
-           <Outlet />
-        </main>
-      </div>
+      <main
+        className="flex flex-1 flex-col overflow-hidden"
+        style={{ color: "#071533" }}
+      >
+        <div className="flex-1 min-h-0 ">
+          <Outlet />
+        </div>
+      </main>
     </div>
   );
 };

@@ -1,11 +1,16 @@
+// testPinecone.js
 import { Pinecone } from "@pinecone-database/pinecone";
+import dotenv from "dotenv";
 
-console.log("Inside pinecone.js:", process.env.PINECONE_API_KEY);
+dotenv.config();
 
-const pinecone = new Pinecone({
+const pc = new Pinecone({
   apiKey: process.env.PINECONE_API_KEY,
 });
 
-const index = pinecone.index(process.env.PINECONE_INDEX);
-
-export default index;
+try {
+  const indexes = await pc.listIndexes();
+  console.log(indexes);
+} catch (err) {
+  console.error(err);
+}

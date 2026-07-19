@@ -13,19 +13,26 @@ import {
 } from "@/components/ui/form";
 
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
+import PasswordInput from "./PasswordInput";
 import { loginSchema } from "../../../schemas/authSchema";
 import useAuth from "../../hooks/useAuth";
+
+const darkInput = {
+  backgroundColor: "rgba(255,248,236,0.06)",
+  border: "1px solid rgba(255,248,236,0.1)",
+  color: "#FFF8EC",
+  borderRadius: "0.875rem",
+  height: "48px",
+  fontSize: "14px",
+};
+
 const LoginForm = () => {
   const navigate = useNavigate();
   const { login } = useAuth();
 
   const form = useForm({
     resolver: zodResolver(loginSchema),
-    defaultValues: {
-      email: "",
-      password: "",
-    },
+    defaultValues: { email: "", password: "" },
   });
 
   const onSubmit = async (values) => {
@@ -37,75 +44,97 @@ const LoginForm = () => {
     }
   };
 
+  const isSubmitting = form.formState.isSubmitting;
+
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        {/* Email */}
         <FormField
           control={form.control}
           name="email"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Email</FormLabel>
-
+              <FormLabel className="text-xs font-medium" style={{ color: "rgba(255,248,236,0.5)" }}>
+                Email address
+              </FormLabel>
               <FormControl>
                 <Input
                   type="email"
-                  placeholder="Enter your email"
+                  placeholder="you@example.com"
                   autoComplete="email"
+                  style={darkInput}
+                  className="placeholder:text-[rgba(255,248,236,0.25)] focus-visible:ring-0 focus-visible:border-[rgba(255,138,31,0.5)]"
                   {...field}
                 />
               </FormControl>
-
-              <FormMessage />
+              <FormMessage className="text-xs text-red-400" />
             </FormItem>
           )}
         />
 
+        {/* Password */}
         <FormField
           control={form.control}
           name="password"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Password</FormLabel>
-
+              <div className="flex items-center justify-between">
+                <FormLabel className="text-xs font-medium" style={{ color: "rgba(255,248,236,0.5)" }}>
+                  Password
+                </FormLabel>
+                <span
+                  className="text-[11px] cursor-pointer transition-colors duration-150"
+                  style={{ color: "rgba(255,138,31,0.7)" }}
+                  onMouseEnter={(e) => (e.currentTarget.style.color = "#FF8A1F")}
+                  onMouseLeave={(e) => (e.currentTarget.style.color = "rgba(255,138,31,0.7)")}
+                >
+                  Forgot password?
+                </span>
+              </div>
               <FormControl>
-                <Input
-                  type="password"
+                <PasswordInput
                   placeholder="Enter your password"
                   autoComplete="current-password"
+                  style={darkInput}
                   {...field}
                 />
               </FormControl>
-
-              <FormMessage />
+              <FormMessage className="text-xs text-red-400" />
             </FormItem>
           )}
         />
 
-        <Button
-          type="submit"
-          className="w-full"
-          disabled={form.formState.isSubmitting}
-        >
-          {form.formState.isSubmitting ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Signing In...
-            </>
-          ) : (
-            "Sign In"
-          )}
-        </Button>
-
-        <div className="text-center text-sm">
-          <span className="text-muted-foreground">Don't have an account? </span>
-
-          <Link
-            to="/register"
-            className="font-medium text-primary hover:underline"
+        {/* Submit */}
+        <div className="pt-2">
+          <button
+            type="submit"
+            disabled={isSubmitting}
+            className="w-full flex items-center justify-center gap-2 font-semibold transition-all duration-200"
+            style={{
+              backgroundColor: isSubmitting ? "rgba(255,138,31,0.5)" : "#FF8A1F",
+              color: "#071533",
+              height: "48px",
+              borderRadius: "0.875rem",
+              fontSize: "14px",
+              cursor: isSubmitting ? "not-allowed" : "pointer",
+            }}
+            onMouseEnter={(e) => {
+              if (!isSubmitting) e.currentTarget.style.backgroundColor = "#DFFF66";
+            }}
+            onMouseLeave={(e) => {
+              if (!isSubmitting) e.currentTarget.style.backgroundColor = "#FF8A1F";
+            }}
           >
-            Sign Up
-          </Link>
+            {isSubmitting ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Signing in...
+              </>
+            ) : (
+              "Sign in"
+            )}
+          </button>
         </div>
       </form>
     </Form>

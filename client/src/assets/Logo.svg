@@ -1,0 +1,14 @@
+<svg viewBox="-95 -95 190 190" xmlns="http://www.w3.org/2000/svg">
+  <g fill="#D2C493">
+    <path d="M 0,-6 L 10,-70 L 0,-92 L -10,-70 Z" data-index="0"></path>
+    <path d="M 0,-6 L 10,-70 L 0,-92 L -10,-70 Z" transform="rotate(30)" data-index="1"></path>
+    <path d="M 0,-6 L 10,-70 L 0,-92 L -10,-70 Z" transform="rotate(60)" data-index="2"></path>
+    <path d="M 0,-6 L 10,-70 L 0,-92 L -10,-70 Z" transform="rotate(120)" data-index="3" style="opacity: 1;"></path>
+    <path d="M 0,-6 L 10,-70 L 0,-92 L -10,-70 Z" transform="rotate(150)" data-index="4" style="opacity: 1;"></path>
+    <path d="M 0,-6 L 10,-70 L 0,-92 L -10,-70 Z" transform="rotate(195)" data-index="5" style="opacity: 1;"></path>
+    <path d="M 0,-6 L 10,-70 L 0,-92 L -10,-70 Z" transform="rotate(230)" data-index="6"></path>
+    <path d="M 0,-6 L 10,-70 L 0,-92 L -10,-70 Z" transform="rotate(265)" data-index="7"></path>
+    <path d="M 0,-6 L 10,-70 L 0,-92 L -10,-70 Z" transform="rotate(300)" data-index="8"></path>
+    <circle cx="0" cy="0" r="7"></circle>
+  </g>
+</svg>
