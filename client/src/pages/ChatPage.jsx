@@ -4,9 +4,9 @@ import { useParams } from "react-router-dom";
 import { useChat } from "@/hooks/useChat";
 import LoadingSpinner from "@/components/Common/LoadingSpinner";
 
-import ChatHeader from "@/components/chat/ChatHeader";
-import MessageList from "@/components/chat/MessageList";
-import ChatInput from "@/components/chat/ChatInput";
+import ChatHeader from "@/components/Chat/ChatHeader";
+import MessageList from "@/components/Chat/MessageList";
+import ChatInput from "@/components/Chat/ChatInput";
 
 const ChatPage = () => {
   const { conversationId } = useParams();
