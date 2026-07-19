@@ -1,8 +1,8 @@
 import { Link } from "react-router-dom";
-import AuthLayout from "../components/auth/AuthLayout";
-import AuthBranding from "../components/auth/AuthBranding";
-import AuthCard from "../components/auth/AuthCard";
-import RegisterForm from "../components/auth/RegisterForm";
+import AuthLayout from "../components/Auth/AuthLayout";
+import AuthBranding from "../components/Auth/AuthBranding";
+import AuthCard from "../components/Auth/AuthCard";
+import RegisterForm from "../components/Auth/RegisterForm";
 import Logo from "@/assets/Logo.svg";
 const RegisterPage = () => {
   return (
